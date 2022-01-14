@@ -172,104 +172,6 @@ class CrossReference
     {
         $offset = $this->getOffsetFor($objectNumber);
         if ($offset === false) {
-			
-				$data=$this->getLocationDataFor($objectNumber);
-					
-				if($data!==false && $data[0]==2)
-				{
-					$objstream=$this->getIndirectObject($data[1]);
-					
-					
-					$type = PdfDictionary::get($objstream->value->value, 'Type')->value;
-					$n = PdfDictionary::get($objstream->value->value, 'N')->value;
-					$first = PdfDictionary::get($objstream->value->value, 'First')->value;
-					$extends = PdfDictionary::get($objstream->value->value, 'Extends')->value;
-					
-					if($type==='ObjStm')
-					{
-						//echo "$type , $n , $first , $extends<br/>";
-						$x=$objstream->value->getUnfilteredStream();
-						//echo "\r\nSTR: ".htmlentities($x);
-						
-						$head=substr($x,0,$first);
-						
-						$pair = preg_split("/[\s,]+/", $head);
-						
-						$total_pairs=(int)(count($pair)/2);
-						
-						//echo count($pair);
-						//echo "<br/>'$head'<hr/>";
-						$objects=[];
-						
-						$index=$data[2];
-						$total=strlen($x);
-						if($index < $total_pairs && $pair[2*$index]== $objectNumber )
-						{
-
-							$obj=[
-								'objectNumber'=>$pair[2*$index],
-								'offset'=>$first+$pair[2*$index+1],
-								'length'=>(($index+1)<$total_pairs)?($pair[2*$index+3]-$pair[2*$index+1]):(($total-$first)-$pair[2*$index+1])
-							];
-							
-							$objdata=substr($x,$obj['offset'],$obj['length']);
-							
-							$objdata=$pair[2*$index]." 0 obj\r\n".
-							$objdata.
-							"endobj\r\n";
-					
-							
-							$parser = new PdfParser(StreamReader::createByString($objdata));
-							//echo htmlentities($objdata).'<br/> READ: ';	
-							
-							try {
-								/** @var PdfIndirectObject $object */
-								$object = $parser->readValue(null, PdfIndirectObject::class);
-
-							} catch (PdfTypeException $e) {
-
-								throw new CrossReferenceException(
-									\sprintf('Object (id:%s) not found at location (%s).', $objectNumber, $offset),
-									CrossReferenceException::OBJECT_NOT_FOUND,
-									$e
-								);
-							}
-							finally
-							{
-							}
-
-							if ($object->objectNumber !== $objectNumber) {
-								throw new CrossReferenceException(
-									\sprintf('Wrong object found, got %s while %s was expected.', $object->objectNumber, $objectNumber),
-									CrossReferenceException::OBJECT_NOT_FOUND
-								);
-							}
-						
-							return $object;
-							
-						}
-	/*					
-						for($i=0;$i<(int)(count($pair)/2);$i++)
-						{
-							echo $pair[2*$i].' '.$pair[2*$i+1].' !<br/>';
-							
-							$obj=[
-								'objectNumber'=>$pair[2*$i],
-								'offset'=>$first+$pair[2*$i+1],
-								'length'=>(($i+1)<(int)(count($pair)/2))?($pair[2*$i+3]-$pair[2*$i+1]):(($total-$first)-$pair[2*$i+1])
-							];
-							
-							echo htmlentities(substr($x,$obj['offset'],$obj['length'])).'<br/>';
-							
-							
-							$objects[]=$obj;
-						}
-	*/					
-						die;
-					}
-				}
-
-			
             throw new CrossReferenceException(
                 \sprintf('Object (id:%s) not found.', $objectNumber),
                 CrossReferenceException::OBJECT_NOT_FOUND
@@ -366,7 +268,11 @@ class CrossReference
 
             $this->checkForEncryption($stream->value);
 
-			return new XRefReader($this->parser,$stream);
+            throw new CrossReferenceException(
+                'This PDF document probably uses a compression technique which is not supported by the ' .
+                'free parser shipped with FPDI. (See https://www.setasign.com/fpdi-pdf-parser for more details)',
+                CrossReferenceException::COMPRESSED_XREF
+            );
         }
 
         throw new CrossReferenceException(

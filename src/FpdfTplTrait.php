@@ -387,9 +387,9 @@ trait FpdfTplTrait
     /**
      * @inheritdoc
      */
-    public function SetFont($family, $style = '', $size = 0)
+    public function SetFont($family, $style = '', $size = 0, $k = 0)
     {
-        parent::SetFont($family, $style, $size);
+        parent::SetFont($family, $style, $size, $k);
         if ($this->page === 0 && $this->currentTemplateId !== null) {
             $this->_out(\sprintf('BT /F%d %.2F Tf ET', $this->CurrentFont['i'], $this->FontSizePt));
         }
