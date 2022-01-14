@@ -8,7 +8,7 @@ A few customers of mine have asked for using pdf templates and adding new inform
 
 After finally finding a solution with FPDI and FPDF it was still bothersome that many pdfs were not supported ( for example ones that Firefox saves )
 
-After spending more time to find some solition I finally read the specification and added support for the files I needed.
+After spending more time to find some solition I finally read the specification and added some support for the files I needed.
 
 https://www.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf
 
